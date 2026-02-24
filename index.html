@@ -159,7 +159,7 @@
     const nx = ((clientX - rect.left) / rect.width) * 2 - 1;
     const ny = ((clientY - rect.top) / rect.height) * 2 - 1;
 
-    targetX = clamp(nx * MAX_X, -MAX_X, MAX_X);
+    targetX = clamp(nx * MAX_X + 4, -MAX_X, MAX_X);
     targetY = clamp(ny * MAX_Y, -MAX_Y, MAX_Y);
   }
 

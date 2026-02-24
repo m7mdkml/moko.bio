@@ -1,179 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Moko.bio</title>
 
-<script>
-  const eye = document.getElementById("eye");
-  const irisWrap = document.getElementById("irisWrap");
-
-  // Tune these to keep the iris inside the outline
-  const MAX_X = 12;   // reduced from 22
-  const MAX_Y = 6;    // reduced from 12
-  const SMOOTHING = 0.12;
-
-  let targetX = 0, targetY = 0;
-  let currentX = 0, currentY = 0;
-
-  function clamp(n, min, max) {
-    return Math.max(min, Math.min(max, n));
-  }
-
-  window.addEventListener("mousemove", (e) => {
-    const rect = eye.getBoundingClientRect();
-    const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-
-    targetX = clamp(nx * MAX_X, -MAX_X, MAX_X);
-    targetY = clamp(ny * MAX_Y, -MAX_Y, MAX_Y);
-  });
-
-  function animate() {
-    currentX += (targetX - currentX) * SMOOTHING;
-    currentY += (targetY - currentY) * SMOOTHING;
-
-    irisWrap.style.transform =
-      `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px))`;
-
-    requestAnimationFrame(animate);
-  }
-  animate();
-
-  // squint on click
-  eye.addEventListener("click", () => {
-    eye.classList.remove("squint");
-    void eye.offsetWidth;
-    eye.classList.add("squint");
-  });
-
-  // random blink 6–10s
-  function scheduleBlink() {
-    const next = 6000 + Math.random() * 4000;
-    setTimeout(() => {
-      if (!eye.classList.contains("squint")) {
-        eye.classList.add("blink");
-        setTimeout(() => eye.classList.remove("blink"), 160);
-      }
-      scheduleBlink();
-    }, next);
-  }
-  scheduleBlink();
-</script>
-  
 <style>
-  body {
-    font-family: sans-serif;
-    max-width: 700px;
-    margin: 40px auto;
-    line-height: 1.6;
-    color: #222;
-    background-color: #d6d1c3;
+  body{
+    font-family:sans-serif;
+    max-width:700px;
+    margin:40px auto;
+    line-height:1.6;
+    color:#222;
+    background-color:#d6d1c3;
+  }
+  h1{color:#0B2FA3;}
+  a{color:#0B2FA3;text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  /* ===== EYE ===== */
+  .eye{
+    position: fixed;
+    left: 40px;
+    top: 120px;
+    width: 320px;
+    aspect-ratio: 3 / 1;
+    cursor: pointer;
+    transform-origin: center;
+    transition: transform 160ms ease, filter 160ms ease;
   }
 
-  h1 { color: #0B2FA3; }
-  a { color: #0B2FA3; text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  /* glow + widen */
+  .eye:hover{
+    filter: drop-shadow(0 0 12px rgba(11,47,163,0.35))
+            drop-shadow(0 0 26px rgba(11,47,163,0.18));
+    transform: scaleY(1.10);
+  }
 
-  /* ===== EYE CONTAINER ===== */
-  .eye {
-  position: fixed;
-  left: 40px;
-  top: 120px;
-  width: 320px;
-  aspect-ratio: 3 / 1;
-  cursor: pointer;
-  transform-origin: center;
-  transition: transform 0.16s ease, filter 0.16s ease;
-}
+  /* clip window (not rectangular) */
+  .eye-clip{
+    position:absolute;
+    inset:0;
+    /* LESS clipped than before */
+    clip-path: ellipse(50% 34% at 50% 50%);
+  }
 
-/* Glow + widen on hover */
-.eye:hover {
-  filter: drop-shadow(0 0 12px rgba(11,47,163,0.35))
-          drop-shadow(0 0 26px rgba(11,47,163,0.18));
-  transform: scaleY(1.10);
-}
+  /* iris that moves */
+  .iris-wrap{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width: 31.5%; /* 30% smaller than 45% */
+    transform: translate(-50%, -50%);
+    will-change: transform;
+  }
+  .iris-img{
+    width:100%;
+    display:block;
+    pointer-events:none;
+  }
 
-/* THIS is the clip. It's an ellipse-ish window. */
-.eye-clip {
-  position: absolute;
-  inset: 0;
+  /* pupil overlay so it can dilate */
+  .pupil{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:18%;
+    aspect-ratio:1/1;
+    border-radius:50%;
+    background:#0b0b0b;
+    transform: translate(-50%, -50%) scale(1);
+    transition: transform 140ms ease;
+    pointer-events:none;
+  }
+  .eye:hover .pupil{
+    transform: translate(-50%, -50%) scale(1.35);
+  }
 
-  /* Ellipse clip — adjust these 4 numbers if needed */
-  clip-path: ellipse(46% 30% at 50% 50%);
-}
+  /* outline on top */
+  .outline{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+  }
 
-/* Iris wrapper for movement */
-.iris-wrap {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 31.5%; /* 30% smaller than 45% */
-  transform: translate(-50%, -50%);
-  will-change: transform;
-}
+  /* squint */
+  .eye.squint{ animation: squint 180ms ease-in-out; }
+  @keyframes squint{
+    0%{transform:scaleY(1.10);}
+    50%{transform:scaleY(0.60);}
+    100%{transform:scaleY(1.10);}
+  }
 
-.iris-img {
-  width: 100%;
-  display: block;
-  pointer-events: none;
-}
+  /* blink */
+  .eye.blink{ animation: blink 140ms ease-in-out; }
+  @keyframes blink{
+    0%{transform:scaleY(1);}
+    50%{transform:scaleY(0.10);}
+    100%{transform:scaleY(1);}
+  }
 
-/* CSS pupil on top */
-.pupil {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 18%;
-  aspect-ratio: 1/1;
-  border-radius: 50%;
-  background: #0b0b0b;
-  transform: translate(-50%, -50%) scale(1);
-  transition: transform 0.14s ease;
-  pointer-events: none;
-}
-
-/* pupil dilates on hover */
-.eye:hover .pupil {
-  transform: translate(-50%, -50%) scale(1.35);
-}
-
-/* Outline always on top */
-.outline {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-/* Squint on click */
-.eye.squint { animation: squint 180ms ease-in-out; }
-@keyframes squint {
-  0%   { transform: scaleY(1.10); }
-  50%  { transform: scaleY(0.60); }
-  100% { transform: scaleY(1.10); }
-}
-
-/* Random blink */
-.eye.blink { animation: blink 140ms ease-in-out; }
-@keyframes blink {
-  0%   { transform: scaleY(1); }
-  50%  { transform: scaleY(0.1); }
-  100% { transform: scaleY(1); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .eye, .pupil { transition: none !important; }
-  .eye.blink, .eye.squint { animation: none !important; }
-}
+  @media (prefers-reduced-motion: reduce){
+    .eye,.pupil{transition:none!important;}
+    .eye.blink,.eye.squint{animation:none!important;}
+  }
 </style>
 </head>
 
 <body>
 
-<!-- ===== THE EYE ===== -->
+<!-- ===== EYE ===== -->
 <div class="eye" id="eye">
   <div class="eye-clip">
     <div class="iris-wrap" id="irisWrap">
@@ -181,7 +119,6 @@
       <div class="pupil"></div>
     </div>
   </div>
-
   <img class="outline" src="eye-outline.png" alt="">
 </div>
 
@@ -201,33 +138,37 @@
 </ul>
 
 <script>
+  // IMPORTANT: script is AFTER the eye HTML so the elements exist.
   const eye = document.getElementById("eye");
   const irisWrap = document.getElementById("irisWrap");
 
-  const MAX_X = 22;
-  const MAX_Y = 12;
-  const SMOOTHING = 0.12;
+  // Movement tuning:
+  // If it feels stuck, increase MAX_X/MAX_Y.
+  // If it pokes out, decrease them.
+  const MAX_X = 16;
+  const MAX_Y = 8;
+  const SMOOTHING = 0.14;
 
   let targetX = 0, targetY = 0;
   let currentX = 0, currentY = 0;
 
-  function clamp(n, min, max) {
-    return Math.max(min, Math.min(max, n));
-  }
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
-  // Track cursor anywhere on page
-  window.addEventListener("mousemove", (e) => {
+  function handleMove(clientX, clientY){
     const rect = eye.getBoundingClientRect();
-
-    const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+    const nx = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const ny = ((clientY - rect.top) / rect.height) * 2 - 1;
 
     targetX = clamp(nx * MAX_X, -MAX_X, MAX_X);
     targetY = clamp(ny * MAX_Y, -MAX_Y, MAX_Y);
+  }
+
+  // Works on desktop + mobile (pointer events)
+  window.addEventListener("pointermove", (e) => {
+    handleMove(e.clientX, e.clientY);
   });
 
-  // Smooth animation loop
-  function animate() {
+  function animate(){
     currentX += (targetX - currentX) * SMOOTHING;
     currentY += (targetY - currentY) * SMOOTHING;
 
@@ -238,15 +179,13 @@
   }
   animate();
 
-  // Click squint
   eye.addEventListener("click", () => {
     eye.classList.remove("squint");
     void eye.offsetWidth;
     eye.classList.add("squint");
   });
 
-  // Random blink every 6–10 seconds
-  function scheduleBlink() {
+  function scheduleBlink(){
     const next = 6000 + Math.random() * 4000;
     setTimeout(() => {
       if (!eye.classList.contains("squint")) {
@@ -256,7 +195,6 @@
       scheduleBlink();
     }, next);
   }
-
   scheduleBlink();
 </script>
 

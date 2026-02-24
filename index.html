@@ -21,16 +21,24 @@
 
   /* ===== EYE CONTAINER ===== */
   .eye {
-    position: fixed;
-    left: 40px;
-    top: 120px;
-    width: 320px;
-    aspect-ratio: 3 / 1;
-    cursor: pointer;
-    overflow: hidden;
-    transform-origin: center;
-    transition: transform 0.16s ease, filter 0.16s ease;
-  }
+  position: fixed;
+  left: 40px;
+  top: 120px;
+  width: 320px;
+  aspect-ratio: 3 / 1;
+  cursor: pointer;
+  transform-origin: center;
+  transition: transform 0.16s ease, filter 0.16s ease;
+
+  /* USE OUTLINE AS MASK */
+  -webkit-mask-image: url("eye-outline.png");
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+
+  mask-image: url("eye-outline.png");
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+}
 
   /* Glow + widen on hover */
   .eye:hover {

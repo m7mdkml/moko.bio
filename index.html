@@ -50,7 +50,7 @@
     position:absolute;
     left:50%;
     top:50%;
-    width: 31.5%; /* 30% smaller than 45% */
+    width: 40%; 
     transform: translate(-50%, -50%);
     will-change: transform;
   }
@@ -145,7 +145,7 @@
   // Movement tuning:
   // If it feels stuck, increase MAX_X/MAX_Y.
   // If it pokes out, decrease them.
-  const MAX_X = 22;
+  const MAX_X = 26;
   const MAX_Y = 8;
   const SMOOTHING = 0.14;
 
@@ -159,7 +159,7 @@
     const nx = ((clientX - rect.left) / rect.width) * 2 - 1;
     const ny = ((clientY - rect.top) / rect.height) * 2 - 1;
 
-    targetX = clamp(nx * MAX_X + 4, -MAX_X, MAX_X);
+    targetX = clamp(nx * MAX_X + 10, -MAX_X, MAX_X);
     targetY = clamp(ny * MAX_Y, -MAX_Y, MAX_Y);
   }
 

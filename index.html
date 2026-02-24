@@ -5,6 +5,63 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Moko.bio</title>
 
+<script>
+  const eye = document.getElementById("eye");
+  const irisWrap = document.getElementById("irisWrap");
+
+  // Tune these to keep the iris inside the outline
+  const MAX_X = 12;   // reduced from 22
+  const MAX_Y = 6;    // reduced from 12
+  const SMOOTHING = 0.12;
+
+  let targetX = 0, targetY = 0;
+  let currentX = 0, currentY = 0;
+
+  function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+  }
+
+  window.addEventListener("mousemove", (e) => {
+    const rect = eye.getBoundingClientRect();
+    const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+
+    targetX = clamp(nx * MAX_X, -MAX_X, MAX_X);
+    targetY = clamp(ny * MAX_Y, -MAX_Y, MAX_Y);
+  });
+
+  function animate() {
+    currentX += (targetX - currentX) * SMOOTHING;
+    currentY += (targetY - currentY) * SMOOTHING;
+
+    irisWrap.style.transform =
+      `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px))`;
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // squint on click
+  eye.addEventListener("click", () => {
+    eye.classList.remove("squint");
+    void eye.offsetWidth;
+    eye.classList.add("squint");
+  });
+
+  // random blink 6–10s
+  function scheduleBlink() {
+    const next = 6000 + Math.random() * 4000;
+    setTimeout(() => {
+      if (!eye.classList.contains("squint")) {
+        eye.classList.add("blink");
+        setTimeout(() => eye.classList.remove("blink"), 160);
+      }
+      scheduleBlink();
+    }, next);
+  }
+  scheduleBlink();
+</script>
+  
 <style>
   body {
     font-family: sans-serif;
@@ -29,97 +86,88 @@
   cursor: pointer;
   transform-origin: center;
   transition: transform 0.16s ease, filter 0.16s ease;
-
-  /* USE OUTLINE AS MASK */
-  -webkit-mask-image: url("eye-outline.png");
-  -webkit-mask-size: 100% 100%;
-  -webkit-mask-repeat: no-repeat;
-
-  mask-image: url("eye-outline.png");
-  mask-size: 100% 100%;
-  mask-repeat: no-repeat;
 }
 
-  /* Glow + widen on hover */
-  .eye:hover {
-    filter: drop-shadow(0 0 12px rgba(11,47,163,0.35))
-            drop-shadow(0 0 26px rgba(11,47,163,0.18));
-    transform: scaleY(1.10);
-  }
+/* Glow + widen on hover */
+.eye:hover {
+  filter: drop-shadow(0 0 12px rgba(11,47,163,0.35))
+          drop-shadow(0 0 26px rgba(11,47,163,0.18));
+  transform: scaleY(1.10);
+}
 
-  /* Iris wrapper for movement */
-  .iris-wrap {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 40%;
-    transform: translate(-50%, -50%);
-    will-change: transform;
-  }
+/* THIS is the clip. It's an ellipse-ish window. */
+.eye-clip {
+  position: absolute;
+  inset: 0;
 
-  .iris-img {
-    width: 100%;
-    display: block;
-    pointer-events: none;
-  }
+  /* Ellipse clip — adjust these 4 numbers if needed */
+  clip-path: ellipse(46% 30% at 50% 50%);
+}
 
-  /* CSS Pupil so we can animate dilation */
-  .pupil {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 18%;
-    aspect-ratio: 1/1;
-    border-radius: 50%;
-    background: #0b0b0b;
-    transform: translate(-50%, -50%) scale(1);
-    transition: transform 0.14s ease;
-    pointer-events: none;
-  }
+/* Iris wrapper for movement */
+.iris-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 31.5%; /* 30% smaller than 45% */
+  transform: translate(-50%, -50%);
+  will-change: transform;
+}
 
-  /* Pupil dilates on hover */
-  .eye:hover .pupil {
-    transform: translate(-50%, -50%) scale(1.35);
-  }
+.iris-img {
+  width: 100%;
+  display: block;
+  pointer-events: none;
+}
 
-  /* Outline always on top */
-  .outline {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-  }
+/* CSS pupil on top */
+.pupil {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18%;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  background: #0b0b0b;
+  transform: translate(-50%, -50%) scale(1);
+  transition: transform 0.14s ease;
+  pointer-events: none;
+}
 
-  /* Squint when clicked */
-  .eye.squint {
-    animation: squint 180ms ease-in-out;
-  }
+/* pupil dilates on hover */
+.eye:hover .pupil {
+  transform: translate(-50%, -50%) scale(1.35);
+}
 
-  @keyframes squint {
-    0%   { transform: scaleY(1.10); }
-    50%  { transform: scaleY(0.60); }
-    100% { transform: scaleY(1.10); }
-  }
+/* Outline always on top */
+.outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
 
-  /* Random blink */
-  .eye.blink {
-    animation: blink 140ms ease-in-out;
-  }
+/* Squint on click */
+.eye.squint { animation: squint 180ms ease-in-out; }
+@keyframes squint {
+  0%   { transform: scaleY(1.10); }
+  50%  { transform: scaleY(0.60); }
+  100% { transform: scaleY(1.10); }
+}
 
-  @keyframes blink {
-    0%   { transform: scaleY(1); }
-    50%  { transform: scaleY(0.1); }
-    100% { transform: scaleY(1); }
-  }
+/* Random blink */
+.eye.blink { animation: blink 140ms ease-in-out; }
+@keyframes blink {
+  0%   { transform: scaleY(1); }
+  50%  { transform: scaleY(0.1); }
+  100% { transform: scaleY(1); }
+}
 
-  /* Accessibility: reduce motion */
-  @media (prefers-reduced-motion: reduce) {
-    .eye, .pupil {
-      transition: none !important;
-      animation: none !important;
-    }
-  }
+@media (prefers-reduced-motion: reduce) {
+  .eye, .pupil { transition: none !important; }
+  .eye.blink, .eye.squint { animation: none !important; }
+}
 </style>
 </head>
 
@@ -127,10 +175,13 @@
 
 <!-- ===== THE EYE ===== -->
 <div class="eye" id="eye">
-  <div class="iris-wrap" id="irisWrap">
-    <img class="iris-img" src="iris.png" alt="">
-    <div class="pupil"></div>
+  <div class="eye-clip">
+    <div class="iris-wrap" id="irisWrap">
+      <img class="iris-img" src="iris.png" alt="">
+      <div class="pupil"></div>
+    </div>
   </div>
+
   <img class="outline" src="eye-outline.png" alt="">
 </div>
 
